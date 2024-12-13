@@ -1,0 +1,109 @@
+{% extends "index.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Dashboard Avanzado</h1>
+
+    <!-- Resumen de Tickets -->
+    <div class="row text-center mb-4">
+        <div class="col-md-4">
+            <div class="card bg-warning text-white shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Tickets Pendientes</h5>
+                    <p class="display-6">{{ tickets_pendientes }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Tickets En Proceso</h5>
+                    <p class="display-6">{{ tickets_en_proceso }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Tickets Resueltos</h5>
+                    <p class="display-6">{{ tickets_resueltos }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tickets por Mes -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Tickets por Mes</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Mes</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for data in tickets_por_mes %}
+                    <tr>
+                        <td>{{ data.mes|date:"F Y" }}</td>
+                        <td>{{ data.total }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Tickets por Técnico -->
+    <div class="card mb-4">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0">Tickets por Técnico</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Técnico</th>
+                        <th>Total Tickets</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for data in tickets_por_tecnico %}
+                    <tr>
+                        <td>{{ data.tecnico_asignado__first_name }} {{ data.tecnico_asignado__last_name }}</td>
+                        <td>{{ data.total }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Tickets por Empresa -->
+    <div class="card mb-4">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">Tickets por Empresa</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Empresa</th>
+                        <th>Total Tickets</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for data in tickets_por_empresa %}
+                    <tr>
+                        <td>{{ data.usuario__nombre_empresa }}</td>
+                        <td>{{ data.total }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

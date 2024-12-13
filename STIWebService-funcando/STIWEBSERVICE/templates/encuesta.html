@@ -1,0 +1,47 @@
+{% extends "index.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Calificar Ticket</h1>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Ticket ID: {{ ticket.id }} - {{ ticket.titulo }}</h5>
+        </div>
+        <div class="card-body">
+            <p><strong>Estado:</strong> <span class="badge bg-success">{{ ticket.estado }}</span></p>
+            <p><strong>Descripción:</strong> {{ ticket.descripcion }}</p>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mt-4">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <!-- Calificación del Servicio -->
+                <div class="mb-3">
+                    <label class="form-label">¿Cómo calificarías el servicio recibido?</label>
+                    <div class="d-flex justify-content-around">
+                        {% for rating in "12345" %}
+                        <div>
+                            <input type="radio" class="btn-check" name="rating" id="rating{{ rating }}"
+                                value="{{ rating }}" required>
+                            <label class="btn btn-outline-primary" for="rating{{ rating }}">{{ rating }} ⭐</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Comentarios Adicionales -->
+                <div class="mb-3">
+                    <label for="comments" class="form-label">Comentarios adicionales (opcional)</label>
+                    <textarea class="form-control" id="comments" name="comments" rows="4"
+                        placeholder="Deja tus comentarios aquí..."></textarea>
+                </div>
+
+                <!-- Botón de Enviar -->
+                <button type="submit" class="btn btn-success w-100">Enviar Encuesta</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
