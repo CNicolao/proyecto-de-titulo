@@ -27,7 +27,7 @@
                         <span class="badge bg-warning text-dark">{{ ticket.prioridad|default:"-" }}</span>
                     </p>
                     <p><strong>¿Requiere Visita en Terreno?:</strong>
-                        <span class="badge bg-{{ ticket.visita_terreno|yesno:"success,secondary" }}">
+                        <span class="badge bg-{{ ticket.visita_terreno|yesno:" success,secondary" }}">
                             {{ ticket.visita_terreno|yesno:"Sí,No" }}
                         </span>
                     </p>
@@ -54,56 +54,49 @@
                 <div class="mb-3">
                     <label for="estado" class="form-label">Estado</label>
                     <select class="form-select" id="estado" name="estado" required>
-                        <option value="Pendiente" {% if ticket.estado == "Pendiente" %}selected{% endif %}>Pendiente
+                        <option value="Pendiente" {% if ticket.estado=="Pendiente" %}selected{% endif %}>Pendiente
                         </option>
-                        <option value="En Progreso" {% if ticket.estado == "En Progreso" %}selected{% endif %}>En Progreso
+                        <option value="En Progreso" {% if ticket.estado=="En Progreso" %}selected{% endif %}>En Progreso
                         </option>
-                        <option value="Resuelto" {% if ticket.estado == "Resuelto" %}selected{% endif %}>Resuelto</option>
+                        <option value="Resuelto" {% if ticket.estado=="Resuelto" %}selected{% endif %}>Resuelto</option>
                     </select>
                 </div>
-              
-                {% if user.is_authenticated and user.email == "coordinador@sti.cl" %}
+
                 <!-- Prioridad -->
                 <div class="mb-3">
                     <label for="prioridad" class="form-label">Prioridad</label>
-                    <select class="form-select" id="prioridad" name="prioridad" required>
-                        <option value="Alta" {% if ticket.prioridad == "Alta" %}selected{% endif %}>Alta</option>
-                        <option value="Media" {% if ticket.prioridad == "Media" %}selected{% endif %}>Media</option>
-                        <option value="Baja" {% if ticket.prioridad == "Baja" %}selected{% endif %}>Baja</option>
+                    {% if user.is_authenticated and user.email == "coordinador@sti.cl" %}
+                    <select class="form-select" id="prioridad" name="prioridad">
+                        <option value="Alta" {% if ticket.prioridad=="Alta" %}selected{% endif %}>Alta</option>
+                        <option value="Media" {% if ticket.prioridad=="Media" %}selected{% endif %}>Media</option>
+                        <option value="Baja" {% if ticket.prioridad=="Baja" %}selected{% endif %}>Baja</option>
                     </select>
-                </div>
                     {% else %}
-                    <div class="mb-3">
-                        <label for="prioridad" class="form-label">Prioridad</label>
-                    <p> {{ ticket.prioridad }}</p>
-                        
-                    </div>
-                {% endif %}
+                    <p><strong>Prioridad:</strong> {{ ticket.prioridad }}</p>
+                    {% endif %}
+                </div>
+
 
                 <!-- Visita en Terreno -->
                 <div class="form-check mb-3">
-                    <input 
-                        class="form-check-input" 
-                        type="checkbox" 
-                        id="visita_terreno" 
-                        name="visita_terreno" 
-                        {% if ticket.visita_terreno %}checked{% endif %}
-                    >
+                    <input class="form-check-input" type="checkbox" id="visita_terreno" name="visita_terreno" {% if
+                        ticket.visita_terreno %}checked{% endif %}>
                     <label class="form-check-label" for="visita_terreno">
                         ¿Requiere Visita en Terreno?
                     </label>
                 </div>
                 {% if user.is_authenticated and user.email == "coordinador@sti.cl" %}
                 <!-- Aquí colocar la interfaz, botones o secciones exclusivas para el coordinador -->
-               
-        
+
+
                 <!-- Técnico Asignado -->
                 <div class="mb-3">
                     <label for="tecnico_asignado" class="form-label">Técnico Asignado (solo técnicos activos)</label>
                     <select class="form-select" id="tecnico_asignado" name="tecnico_asignado">
                         <option value="">Seleccione un técnico</option>
                         {% for tecnico in tecnicos %}
-                            <option value="{{ tecnico.id }}" {% if ticket.tecnico_asignado == tecnico %}selected{% endif %}>{{ tecnico.get_full_name }}</option>
+                        <option value="{{ tecnico.id }}" {% if ticket.tecnico_asignado==tecnico %}selected{% endif %}>{{
+                            tecnico.get_full_name }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -112,7 +105,8 @@
                 <!-- Solución -->
                 <div class="mb-3">
                     <label for="solucion" class="form-label">Descripción de la Solución</label>
-                    <textarea class="form-control" id="solucion" name="solucion" rows="4">{{ ticket.solucion|default:"" }}</textarea>
+                    <textarea class="form-control" id="solucion" name="solucion"
+                        rows="4">{{ ticket.solucion|default:"" }}</textarea>
                 </div>
 
                 <!-- Botones -->

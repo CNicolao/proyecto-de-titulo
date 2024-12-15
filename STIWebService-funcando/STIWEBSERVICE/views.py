@@ -13,7 +13,7 @@ from django.contrib.auth import get_user_model
 from django.dispatch import receiver
 from django.core.paginator import Paginator
 from django.db.models.signals import post_save
-
+import joblib
 from django.http import HttpResponse
 from .forms import UserImportForm
 from .resources import CustomUserResource
@@ -266,7 +266,14 @@ def ticket_vista(request):
         if not (titulo and descripcion):
             messages.error(request, "El título y la descripción son obligatorios.")
         else:
-            Ticket.objects.create(titulo=titulo, descripcion=descripcion, usuario=request.user)
+            # Crear instancia del modelo Ticket
+            ticket = Ticket(
+                titulo=titulo,
+                descripcion=descripcion,
+                usuario=request.user
+            )
+            ticket.save()  # Aquí se ejecuta el método save
+            print(f"Ticket creado con prioridad: {ticket.prioridad}")
             messages.success(request, "El ticket fue creado exitosamente.")
             return redirect("home")
     return render(request, "ticket1.html")
@@ -300,37 +307,39 @@ def dashboard_vista(request):
 @login_required
 def detalle_ticket_vista(request, ticket_id):
     ticket = get_object_or_404(Ticket, id=ticket_id)
-    
-    # Obtener lista de técnicos disponibles (is_staff=True y is_active=True)
     tecnicos_disponibles = CustomUser.objects.filter(is_staff=True, is_active=True)
-    
+
     if request.method == 'POST' and request.user.is_staff:
         estado_anterior = ticket.estado
+        # Actualizar estado, prioridad y otros campos según el formulario
         ticket.estado = request.POST.get('estado')
-        ticket.prioridad = request.POST.get('prioridad')
         ticket.solucion = request.POST.get('solucion')
         ticket.visita_terreno = 'visita_terreno' in request.POST
 
-        # Obtener el técnico seleccionado del formulario (si existe)
+        # Si la prioridad está presente en el formulario, actualizarla
+        prioridad_manual = request.POST.get('prioridad')
+        if prioridad_manual:
+            ticket.prioridad = prioridad_manual
+
+        # Técnico asignado
         tecnico_id = request.POST.get('tecnico_asignado')
         if tecnico_id:
             try:
                 tecnico_seleccionado = CustomUser.objects.get(id=tecnico_id, is_staff=True, is_active=True)
-                tecnico_anterior = ticket.tecnico_asignado
-                ticket.tecnico_asignado = tecnico_seleccionado # type: ignore
+                ticket.tecnico_asignado = tecnico_seleccionado
             except CustomUser.DoesNotExist:
-                # Si el técnico no existe o no está activo/staff, no se asigna
                 pass
 
         ticket.save()
-        if ticket.tecnico_asignado and (tecnico_id or not tecnico_anterior or tecnico_anterior != ticket.tecnico_asignado): # type: ignore
-            # Enviar correo al técnico asignado
+
+        # Enviar correos según cambios realizados
+        if ticket.tecnico_asignado and estado_anterior != ticket.estado:
             enviar_correo_a_tecnico(ticket)
-        messages.success(request, "El ticket ha sido actualizado correctamente.")
         if estado_anterior == 'Pendiente' and ticket.estado == 'En Progreso':
             enviar_correo_ticket_en_progreso(ticket)
         if ticket.estado == 'Resuelto' and ticket.usuario.email:
             enviar_correo_calificacion(ticket)
+
         messages.success(request, "El ticket ha sido actualizado correctamente.")
         return redirect('dashboard')
 
@@ -338,7 +347,6 @@ def detalle_ticket_vista(request, ticket_id):
         'ticket': ticket,
         'tecnicos': tecnicos_disponibles,
     })
-
 
 @login_required
 def eliminar_ticket_vista(request, ticket_id):
@@ -401,3 +409,37 @@ def coordinador_vista(request):
     }
     return render(request, "coordinador.html", context)
 
+
+# Cargar el modelo, vectorizador y encoder
+try:
+    modelo = joblib.load("modelo_prioridad.pkl")
+    vectorizer = joblib.load("vectorizer.pkl")
+    label_encoder = joblib.load("label_encoder.pkl")
+except Exception as e:
+    print(f"Error cargando el modelo de predicción: {e}")
+
+def predecir_prioridad(titulo, descripcion):
+    """
+    Función para predecir la prioridad de un ticket basado en su título y descripción.
+    """
+    try:
+        texto = titulo + " " + descripcion
+        texto_tfidf = vectorizer.transform([texto])  # Transformar texto con el vectorizador
+        prediccion = modelo.predict(texto_tfidf)  # Usar el modelo para predecir
+        prioridad = label_encoder.inverse_transform(prediccion)[0]  # Decodificar la prioridad
+        return prioridad
+    except Exception as e:
+        print(f"Error en predecir_prioridad: {e}")
+        return "Media"  # Fallback a prioridad Media en caso de error
+    
+@login_required
+def probar_prediccion(request):
+    if request.method == "POST":
+        titulo = request.POST.get("titulo")
+        descripcion = request.POST.get("descripcion")
+        if not (titulo and descripcion):
+            messages.error(request, "El título y la descripción son obligatorios.")
+        else:
+            prioridad = predecir_prioridad(titulo, descripcion)
+            messages.success(request, f"Predicción de prioridad: {prioridad}")
+    return render(request, "probar_prediccion.html")

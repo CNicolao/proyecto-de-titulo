@@ -3,8 +3,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.exceptions import ValidationError
-
-
+from .utils import predecir_prioridad
 
 class CustomUser(AbstractUser):
     nombre_empresa = models.CharField(max_length=255, blank=True, null=True)
@@ -60,10 +59,19 @@ class Ticket(models.Model):
 )
     visita_terreno = models.BooleanField(default=False)
     solucion = models.TextField(blank=True, null=True)  
+    
 
+    def save(self, *args, **kwargs):
+        if not self.pk:  # Si el ticket es nuevo
+            print("Calculando prioridad automáticamente...")
+            self.prioridad = predecir_prioridad(self.titulo, self.descripcion)
+            print(f"Prioridad asignada: {self.prioridad}")
 
-    def __str__(self):
-        return f"Ticket #{self.id} - {self.titulo}" # type: ignore
+        if not self.prioridad:
+            self.prioridad = "Media"  # Fallback en caso de error
+
+        super().save(*args, **kwargs)
+
 
 
 class Comentario(models.Model):

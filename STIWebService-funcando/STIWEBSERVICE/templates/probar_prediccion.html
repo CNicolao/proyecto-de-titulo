@@ -1,0 +1,6 @@
+<form method="post">
+    {% csrf_token %}
+    <input type="text" name="titulo" placeholder="Título del ticket">
+    <textarea name="descripcion" placeholder="Descripción del problema"></textarea>
+    <button type="submit">Probar Predicción</button>
+</form>
